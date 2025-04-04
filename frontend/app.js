@@ -101,6 +101,8 @@ function criarCliente() {
     const nome = document.getElementById('nomeCliente').value;
     const email = document.getElementById('emailCliente').value;
     const telefone = document.getElementById('telefoneCliente').value;
+    const cpf = document.getElementById('cpfCliente').value;
+    const endereco = document.getElementById('enderecoCliente').value;
     const token = localStorage.getItem('token');
 
     if (!nome || !email || !telefone) {
