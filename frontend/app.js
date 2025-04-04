@@ -116,7 +116,7 @@ function criarCliente() {
             'Content-Type': 'application/json',
             'Authorization': 'Bearer ' + token
         },
-        body: JSON.stringify({ nome, email, telefone })
+        body: JSON.stringify({ nome, email, telefone, cpf, endereco })
     })
     .then(res => res.json())
     .then(data => {
