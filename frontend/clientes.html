@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<html lang="pt">
+<head>
+    <meta charset="UTF-8">
+    <title>Clientes - Sistema de Vendas</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="container">
+        <h2>Clientes</h2>
+        <!-- Área para listar clientes cadastrados -->
+        <div id="listaClientes"></div>
+        <h3>Cadastrar Novo Cliente</h3>
+        <input type="text" id="nomeCliente" placeholder="Nome do Cliente">
+        <input type="email" id="emailCliente" placeholder="Email">
+        <input type="text" id="telefoneCliente" placeholder="Telefone">
+        <input type="text" id="cpfCliente" placeholder="CPF">
+        <input type="text" id="enderecoCliente" placeholder="Endereço">
+        <button onclick="criarCliente()">Cadastrar Cliente</button>
+        <p><a href="home.html">Voltar ao Dashboard</a></p>
+    </div>
+    <script src="app.js"></script>
+</body>

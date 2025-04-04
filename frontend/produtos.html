@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<html lang="pt">
+<head>
+    <meta charset="UTF-8">
+    <title>Produtos - Sistema de Vendas</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="container">
+        <h2>Produtos</h2>
+        <!-- Área para listar produtos cadastrados -->
+        <div id="listaProdutos"></div>
+        <h3>Cadastrar Novo Produto</h3>
+        <input type="text" id="nomeProduto" placeholder="Nome do Produto">
+        <input type="number" step="0.01" id="precoProduto" placeholder="Preço">
+        <input type="number" id="estoqueProduto" placeholder="Estoque">
+        <input type="text" id="fotoProduto" placeholder="URL da Foto">
+        <button onclick="criarProduto()">Cadastrar Produto</button>
+        <p><a href="home.html">Voltar ao Dashboard</a></p>
+    </div>
+    <script src="app.js"></script>
+</body>
+</html>
