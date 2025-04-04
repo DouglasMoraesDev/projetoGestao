@@ -97,6 +97,7 @@ function listarProdutos() {
 }
 
 // Função para criar cliente
+// Função para criar cliente
 function criarCliente() {
     const nome = document.getElementById('nomeCliente').value;
     const email = document.getElementById('emailCliente').value;
@@ -105,7 +106,7 @@ function criarCliente() {
     const endereco = document.getElementById('enderecoCliente').value;
     const token = localStorage.getItem('token');
 
-    if (!nome || !email || !telefone) {
+    if (!nome || !email || !telefone || !cpf || !endereco) {
         alert("Preencha todos os campos!");
         return;
     }
@@ -118,13 +119,22 @@ function criarCliente() {
         },
         body: JSON.stringify({ nome, email, telefone, cpf, endereco })
     })
-    .then(res => res.json())
+    .then(res => {
+        if (!res.ok) {
+            return res.json().then(err => { throw err; });
+        }
+        return res.json();
+    })
     .then(data => {
-        alert(data.message || data.error);
+        alert(data.message || "Cliente criado com sucesso!");
         listarClientes();
     })
-    .catch(error => console.error("Erro ao criar cliente:", error));
+    .catch(error => {
+        console.error("Erro ao criar cliente:", error);
+        alert(error.error || "Erro ao criar cliente.");
+    });
 }
+
 
 // Função para listar clientes
 function listarClientes() {
@@ -152,27 +162,55 @@ function realizarVenda() {
     const clienteId = parseInt(document.getElementById('clienteId').value);
     const produtoId = parseInt(document.getElementById('produtoId').value);
     const quantidade = parseInt(document.getElementById('quantidade').value);
+    const observacao = document.getElementById('observacao').value.trim();
+    const parcelado = document.getElementById('parcelado').checked;
+    const formaPagamento = document.getElementById('formaPagamento').value.trim();
+    const valorEntrada = parseFloat(document.getElementById('valorEntrada').value);
+    const parcelas = parseInt(document.getElementById('parcelas').value);
+    const valorParcela = parseFloat(document.getElementById('valorParcela').value);
     const token = localStorage.getItem('token');
 
-    if (isNaN(clienteId) || isNaN(produtoId) || isNaN(quantidade)) {
-        alert("Preencha todos os campos corretamente!");
+    // Verificação dos campos obrigatórios
+    if (isNaN(clienteId) || isNaN(produtoId) || isNaN(quantidade) || !formaPagamento) {
+        alert("Preencha todos os campos obrigatórios corretamente!");
         return;
     }
+
+    // Criando objeto com os dados da venda
+    const vendaData = {
+        clienteId,
+        produtoId,
+        quantidade,
+        observacao: observacao || null,
+        parcelado,
+        formaPagamento,
+        valorEntrada: isNaN(valorEntrada) ? 0 : valorEntrada,
+        parcelas: isNaN(parcelas) ? 0 : parcelas,
+        valorParcela: isNaN(valorParcela) ? 0 : valorParcela
+    };
 
     fetch('http://localhost:3000/venda/realizar', {
         method: 'POST',
         headers: { 
             'Content-Type': 'application/json',
-            'Authorization': 'Bearer ' + token
+            'Authorization': `Bearer ${token}`
         },
-        body: JSON.stringify({ clienteId, produtoId, quantidade })
+        body: JSON.stringify(vendaData)
     })
-    .then(res => res.json())
-    .then(data => {
-        alert(data.message || data.error);
-        listarVendas();
+    .then(async (res) => {
+        const data = await res.json();
+        
+        if (!res.ok) {
+            throw new Error(data.error || "Erro ao realizar venda!");
+        }
+        
+        alert(data.message || "Venda realizada com sucesso!");
+        listarVendas(); // Atualiza a lista após a venda
     })
-    .catch(error => console.error("Erro ao realizar venda:", error));
+    .catch(error => {
+        console.error("Erro ao realizar venda:", error);
+        alert(error.message);
+    });
 }
 
 // Função para listar vendas
