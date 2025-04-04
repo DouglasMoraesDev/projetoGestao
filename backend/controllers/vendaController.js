@@ -1,41 +1,37 @@
-// backend/controllers/vendaController.js
-// Controladores para processamento de vendas, agora utilizando nomes de cliente e produto
-// e realizando cálculos para vendas parceladas.
-
 const db = require('../db');
 const produtoModel = require('../models/produtoModel');
 const vendaModel = require('../models/vendaModel');
 const clienteModel = require('../models/clienteModel');
 
 exports.realizarVenda = async (req, res) => {
-  // Recebe os dados da venda. Agora o usuário informa o nome do cliente e do produto.
+  // Recebe os dados da venda. Agora o usuário informa os IDs do cliente e do produto.
   const {
-    clienteNome,
-    produtoNome,
+    clienteId,
+    produtoId,
     quantidade,
     observacao = "",
     parcelado = false,
-    forma_pagamento = "",
-    valor_entrada = 0,
+    formaPagamento = "",
+    valorEntrada = 0,
     parcelas = 0
   } = req.body;
   
   const usuario_id = req.user.id; // Obtido do middleware de autenticação
 
-  // Validação dos campos obrigatórios
-  if (!clienteNome || !produtoNome || !quantidade) {
+  // Validação dos campos obrigatórios: cliente, produto e quantidade
+  if (!clienteId || !produtoId || !quantidade) {
     return res.status(400).json({ error: "Preencha os campos obrigatórios: cliente, produto e quantidade." });
   }
   
   try {
-    // Busca o cliente pelo nome
-    const cliente = await clienteModel.buscarPorNome(clienteNome);
+    // Busca o cliente pelo ID
+    const cliente = await clienteModel.buscarPorId(clienteId);
     if (!cliente) {
       return res.status(404).json({ error: "Cliente não encontrado." });
     }
     
-    // Busca o produto pelo nome
-    const produto = await produtoModel.buscarPorNome(produtoNome);
+    // Busca o produto pelo ID
+    const produto = await produtoModel.buscarPorId(produtoId);
     if (!produto) {
       return res.status(404).json({ error: "Produto não encontrado." });
     }
@@ -49,15 +45,15 @@ exports.realizarVenda = async (req, res) => {
     const total = produto.preco * quantidade;
     
     // Variáveis para venda parcelada
-    let valor_parcela = 0;
+    let valorParcela = 0;
     if (parcelado) {
-      // Se for parcelado, valor_entrada e parcelas devem ser informados
-      if (!valor_entrada || !parcelas) {
+      // Se for parcelado, valorEntrada e parcelas devem ser informados
+      if (!valorEntrada || !parcelas) {
         return res.status(400).json({ error: "Para vendas parceladas, informe o valor de entrada e o número de parcelas." });
       }
       // Calcula o valor restante e o valor de cada parcela
-      const restante = total - valor_entrada;
-      valor_parcela = restante / parcelas;
+      const restante = total - valorEntrada;
+      valorParcela = restante / parcelas;
     }
     
     // Atualiza o estoque do produto
@@ -71,13 +67,13 @@ exports.realizarVenda = async (req, res) => {
       total,
       observacao,
       parcelado,
-      forma_pagamento,
-      valor_entrada,
+      formaPagamento,
+      valorEntrada,
       parcelas,
-      valor_parcela
+      valorParcela
     );
     
-    // Registra a transação de entrada (se a venda não for parcelada, ou considera o total)
+    // Registra a transação de entrada (inclui informações do cliente, produto e pagamento)
     const descricao = `Venda de ${produto.nome} para ${cliente.nome}, Quantidade: ${quantidade}`;
     await new Promise((resolve, reject) => {
       db.query(
