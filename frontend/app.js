@@ -1,3 +1,5 @@
+// ================== AUTENTICAÇÃO ==================
+
 // Função para login
 function fazerLogin() {
     const email = document.getElementById('email').value;
@@ -47,7 +49,9 @@ function logout() {
     window.location.href = "login.html";
 }
 
-// Função para criar produto
+// ================== PRODUTOS ==================
+
+// Criar produto
 function criarProduto() {
     const nome = document.getElementById('nomeProduto').value;
     const preco = parseFloat(document.getElementById('precoProduto').value);
@@ -75,7 +79,7 @@ function criarProduto() {
     .catch(error => console.error("Erro ao criar produto:", error));
 }
 
-// Função para listar produtos
+// Listar produtos
 function listarProdutos() {
     const token = localStorage.getItem('token');
 
@@ -96,8 +100,29 @@ function listarProdutos() {
     .catch(error => console.error("Erro ao listar produtos:", error));
 }
 
-// Função para criar cliente
-// Função para criar cliente
+// Carregar produtos no select de vendas
+function carregarProdutos() {
+    const token = localStorage.getItem('token');
+    fetch('http://localhost:3000/produto/listar', {
+        headers: { 'Authorization': 'Bearer ' + token }
+    })
+    .then(res => res.json())
+    .then(produtos => {
+        const select = document.getElementById('produtoId');
+        select.innerHTML = '<option value="">Selecione um Produto</option>';
+        produtos.forEach(prod => {
+            const option = document.createElement('option');
+            option.value = prod.id;
+            option.textContent = `${prod.nome} - R$ ${prod.preco}`;
+            select.appendChild(option);
+        });
+    })
+    .catch(error => console.error("Erro ao carregar produtos:", error));
+}
+
+// ================== CLIENTES ==================
+
+// Criar cliente
 function criarCliente() {
     const nome = document.getElementById('nomeCliente').value;
     const email = document.getElementById('emailCliente').value;
@@ -135,8 +160,7 @@ function criarCliente() {
     });
 }
 
-
-// Função para listar clientes
+// Listar clientes
 function listarClientes() {
     const token = localStorage.getItem('token');
 
@@ -147,17 +171,41 @@ function listarClientes() {
     .then(res => res.json())
     .then(data => {
         const lista = document.getElementById('listaClientes');
-        lista.innerHTML = '';
-        data.forEach(cli => {
-            const p = document.createElement('p');
-            p.textContent = `${cli.id} - ${cli.nome} - ${cli.email} - ${cli.telefone}`;
-            lista.appendChild(p);
-        });
+        if (lista) {
+            lista.innerHTML = '';
+            data.forEach(cli => {
+                const p = document.createElement('p');
+                p.textContent = `${cli.id} - ${cli.nome} - ${cli.email}`;
+                lista.appendChild(p);
+            });
+        }
     })
     .catch(error => console.error("Erro ao listar clientes:", error));
 }
 
-// Função para realizar venda
+// Carregar clientes no select de vendas
+function carregarClientes() {
+    const token = localStorage.getItem('token');
+    fetch('http://localhost:3000/cliente/listar', {
+        headers: { 'Authorization': 'Bearer ' + token }
+    })
+    .then(res => res.json())
+    .then(clientes => {
+        const select = document.getElementById('clienteId');
+        select.innerHTML = '<option value="">Selecione um Cliente</option>';
+        clientes.forEach(cli => {
+            const option = document.createElement('option');
+            option.value = cli.id;
+            option.textContent = `${cli.nome} - ${cli.email}`;
+            select.appendChild(option);
+        });
+    })
+    .catch(error => console.error("Erro ao carregar clientes:", error));
+}
+
+// ================== VENDAS ==================
+
+// Criar venda
 function realizarVenda() {
     const clienteId = parseInt(document.getElementById('clienteId').value);
     const produtoId = parseInt(document.getElementById('produtoId').value);
@@ -165,18 +213,16 @@ function realizarVenda() {
     const observacao = document.getElementById('observacao').value.trim();
     const parcelado = document.getElementById('parcelado').checked;
     const formaPagamento = document.getElementById('formaPagamento').value.trim();
-    const valorEntrada = parseFloat(document.getElementById('valorEntrada').value);
-    const parcelas = parseInt(document.getElementById('parcelas').value);
-    const valorParcela = parseFloat(document.getElementById('valorParcela').value);
+    const valorEntrada = parseFloat(document.getElementById('valorEntrada').value) || 0;
+    const parcelas = parseInt(document.getElementById('parcelas').value) || 0;
+    const valorParcela = parseFloat(document.getElementById('valorParcela').value) || 0;
     const token = localStorage.getItem('token');
 
-    // Verificação dos campos obrigatórios
-    if (isNaN(clienteId) || isNaN(produtoId) || isNaN(quantidade) || !formaPagamento) {
+    if (!clienteId || !produtoId || !quantidade || !formaPagamento) {
         alert("Preencha todos os campos obrigatórios corretamente!");
         return;
     }
 
-    // Criando objeto com os dados da venda
     const vendaData = {
         clienteId,
         produtoId,
@@ -184,9 +230,9 @@ function realizarVenda() {
         observacao: observacao || null,
         parcelado,
         formaPagamento,
-        valorEntrada: isNaN(valorEntrada) ? 0 : valorEntrada,
-        parcelas: isNaN(parcelas) ? 0 : parcelas,
-        valorParcela: isNaN(valorParcela) ? 0 : valorParcela
+        valorEntrada,
+        parcelas,
+        valorParcela
     };
 
     fetch('http://localhost:3000/venda/realizar', {
@@ -197,15 +243,11 @@ function realizarVenda() {
         },
         body: JSON.stringify(vendaData)
     })
-    .then(async (res) => {
+    .then(async res => {
         const data = await res.json();
-        
-        if (!res.ok) {
-            throw new Error(data.error || "Erro ao realizar venda!");
-        }
-        
+        if (!res.ok) throw new Error(data.error || "Erro ao realizar venda!");
         alert(data.message || "Venda realizada com sucesso!");
-        listarVendas(); // Atualiza a lista após a venda
+        listarVendas();
     })
     .catch(error => {
         console.error("Erro ao realizar venda:", error);
@@ -213,36 +255,39 @@ function realizarVenda() {
     });
 }
 
-// Função para listar vendas
+// Listar vendas
 function listarVendas() {
     const token = localStorage.getItem('token');
 
     fetch('http://localhost:3000/venda/listar', {
-        method: 'GET',
         headers: { 'Authorization': 'Bearer ' + token }
     })
     .then(res => res.json())
     .then(data => {
         const lista = document.getElementById('listaVendas');
-        lista.innerHTML = '';
-        data.forEach(venda => {
-            const p = document.createElement('p');
-            p.textContent = `Venda ID: ${venda.id} - Cliente: ${venda.cliente_id} - Produto: ${venda.produto_id} - Quantidade: ${venda.quantidade} - Total: R$ ${venda.total}`;
-            lista.appendChild(p);
-        });
+        if (lista) {
+            lista.innerHTML = '';
+            data.forEach(venda => {
+                const p = document.createElement('p');
+                p.textContent = `Venda ID: ${venda.id} - Cliente: ${venda.cliente_id} - Produto: ${venda.produto_id} - Quantidade: ${venda.quantidade} - Total: R$ ${venda.total}`;
+                lista.appendChild(p);
+            });
+        }
     })
     .catch(error => console.error("Erro ao listar vendas:", error));
 }
 
-// Se estivermos na páginas de listagem, chamar a função correspondente ao carregar
-if (window.location.pathname.includes('produtos.html')) {
-    listarProdutos();
-}
+// ================== CONTROLE DE PÁGINAS ==================
 
-if (window.location.pathname.includes('clientes.html')) {
-    listarClientes();
-}
+// Executa funções ao carregar páginas específicas
+document.addEventListener('DOMContentLoaded', () => {
+    const path = window.location.pathname;
 
-if (window.location.pathname.includes('vendas.html')) {
-    listarVendas();
-}
+    if (path.includes('produtos.html')) listarProdutos();
+    if (path.includes('clientes.html')) listarClientes();
+    if (path.includes('vendas.html')) {
+        carregarClientes();
+        carregarProdutos();
+        listarVendas();
+    }
+});
